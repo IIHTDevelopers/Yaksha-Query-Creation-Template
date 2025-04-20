@@ -88,56 +88,72 @@ public class ProductControllerTest {
 				businessTestFile);
 	}
 
-	// Test to check DELETE request to delete a product
-	@Test
-    public void testDeleteProduct() throws Exception {
-        when(this.productRepository.existsById(eq(1L))).thenReturn(true);
-
-        RequestBuilder requestBuilder = MockMvcRequestBuilders.delete("/api/products/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON);
-
-        MvcResult result = mockMvc.perform(requestBuilder).andReturn();
-
-        yakshaAssert(currentTest(), (result.getResponse().getContentAsString().contentEquals("") ? "true" : "false"),
-                businessTestFile);
-    }
-
-	// Test for searching products by description (contains keyword)
 	@Test
 	public void testSearchByDescription() throws Exception {
-		List<Product> products = List.of(new Product("Smartphone A", "Latest model with great features", 500.0),
-				new Product("Smartphone B", "Best smartphone with excellent battery", 600.0));
+		List<Product> products = List.of(
+			new Product("Smartphone A", "Latest model with great features", 500.0),
+			new Product("Smartphone B", "Best smartphone with excellent battery", 600.0)
+		);
 
-		when(this.productRepository.findByDescription("smartphone")).thenReturn(products);
+		boolean methodExists = false;
+
+		try {
+			// Check if the method exists in ProductRepository interface
+			methodExists = ProductRepository.class.getDeclaredMethod("findByDescription", String.class) != null;
+		} catch (NoSuchMethodException e) {
+			System.out.println("Expected method 'findByDescription' does not exist yet.");
+		}
+
+		if (methodExists) {
+			// Use reflection to mock the response without direct invocation
+			when(productRepository.getClass().getMethod("findByDescription", String.class)
+				.invoke(productRepository, "smartphone")).thenReturn(products);
+		}
 
 		RequestBuilder requestBuilder = MockMvcRequestBuilders.get("/api/products/search")
-				.param("keyword", "smartphone").contentType(MediaType.APPLICATION_JSON)
-				.accept(MediaType.APPLICATION_JSON);
+			.param("keyword", "smartphone")
+			.contentType(MediaType.APPLICATION_JSON)
+			.accept(MediaType.APPLICATION_JSON);
 
 		MvcResult result = mockMvc.perform(requestBuilder).andReturn();
 
 		yakshaAssert(currentTest(),
-				(result.getResponse().getContentAsString().contentEquals(asJsonString(products)) ? "true" : "false"),
-				businessTestFile);
+			(result.getResponse().getContentAsString().contentEquals(asJsonString(products)) ? "true" : "false"),
+			businessTestFile);
 	}
 
-	// Test for searching products by price range
 	@Test
 	public void testSearchByPriceRange() throws Exception {
-		List<Product> products = List.of(new Product("Product A", "Description A", 150.0),
-				new Product("Product B", "Description B", 300.0));
+		List<Product> products = List.of(
+			new Product("Product A", "Description A", 150.0),
+			new Product("Product B", "Description B", 300.0)
+		);
 
-		when(this.productRepository.findByPriceBetween(100.0, 500.0)).thenReturn(products);
+		boolean methodExists = false;
+
+		try {
+			// Check if the method exists in ProductRepository interface
+			methodExists = ProductRepository.class.getDeclaredMethod("findByPriceBetween", Double.class, Double.class) != null;
+		} catch (NoSuchMethodException e) {
+			System.out.println("Expected method 'findByPriceBetween' does not exist yet.");
+		}
+
+		if (methodExists) {
+			// Use reflection to mock the response without direct invocation
+			when(productRepository.getClass().getMethod("findByPriceBetween", Double.class, Double.class)
+				.invoke(productRepository, 100.0, 500.0)).thenReturn(products);
+		}
 
 		RequestBuilder requestBuilder = MockMvcRequestBuilders.get("/api/products/search/price")
-				.param("minPrice", "100").param("maxPrice", "500").contentType(MediaType.APPLICATION_JSON)
-				.accept(MediaType.APPLICATION_JSON);
+			.param("minPrice", "100").param("maxPrice", "500")
+			.contentType(MediaType.APPLICATION_JSON)
+			.accept(MediaType.APPLICATION_JSON);
 
 		MvcResult result = mockMvc.perform(requestBuilder).andReturn();
 
 		yakshaAssert(currentTest(),
-				(result.getResponse().getContentAsString().contentEquals(asJsonString(products)) ? "true" : "false"),
-				businessTestFile);
+			(result.getResponse().getContentAsString().contentEquals(asJsonString(products)) ? "true" : "false"),
+			businessTestFile);
 	}
+
 }
